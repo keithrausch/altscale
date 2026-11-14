@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${command:cmake.getLaunchTargetDirectory}/..",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Pass SIGINT to application",
+                    "text": "handle SIGINT nostop noprint pass",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Pass SIGPIPE to application",
+                    "text": "handle SIGPIPE nostop noprint pass",
+                    "ignoreFailures": false
+                }
+            ]
+        }
+    ]
+}
