@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<managers>
+  <manager>
+    <enabled>1</enabled>
+    <name>rend</name>
+    <type>rend</type>
+    <config>managers/rend/config.xml</config>
+  </manager>
+</managers>

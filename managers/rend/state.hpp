@@ -1,5 +1,5 @@
-#ifndef STATE_HPP
-#define STATE_HPP
+#ifndef COMMON_STATE_HPP
+#define COMMON_STATE_HPP
 
 #include <chrono>
 #include <string>
@@ -9,8 +9,7 @@
 
 #include <nlohmann/json.hpp>
 
-using UUID_t = std::string;
-
+// namespace common {
 
 struct ClientState
 {
@@ -23,19 +22,19 @@ struct ClientState
         bool operator==(const InterfaceInfo&) const = default;
     };
     
-    UUID_t uuid{};
+    std::string uuid{};
     std::unordered_map<std::string /*iface name*/, InterfaceInfo> iface_infos{};
     std::vector<std::string> public_endpoints{};
 
     bool operator==(const ClientState&) const = default;
 
 
-    static ClientState parse(const nlohmann::json& j)
+    static ClientState from_json(const nlohmann::json& j)
     {
         ClientState state{};
 
         // uuid
-        state.uuid = j.at("uuid").get<UUID_t>();
+        state.uuid = j.at("uuid").get<std::string>();
 
         // public endpoints
         state.public_endpoints = j.value("public_endpoints", std::vector<std::string>{});
@@ -94,7 +93,7 @@ struct Client
 // Shared application state protected for multi-threaded access
 struct ServerState {
     std::mutex mutex{};
-    std::unordered_map<UUID_t, Client> clients{};
+    std::unordered_map<std::string, Client> clients{};
 
     nlohmann::json to_json() const
     {
@@ -113,5 +112,6 @@ struct ServerState {
     }
 };
 
+// }
 
 #endif

@@ -2,6 +2,14 @@
 #define SERVER_HPP
 
 #include <iostream>
+#include <memory>
+#include <thread>
+#include <filesystem>
+
+#include "managers/rend/state.hpp"
+
+#include "httplib.h"
+#include "common/utils/signal.hpp"
 
 class ThreadedServer
 {
@@ -33,7 +41,18 @@ class ThreadedServer
 
         server = std::move(server_ptr);
 
-        server->Get("/api/query", [&](const httplib::Request &, httplib::Response &res) {
+        server->Post("/api/stop", [&](const httplib::Request &, httplib::Response &res) {
+            std::lock_guard lock(state.mutex);
+
+            res.status = 200;
+            nlohmann::json json_response = {{"code", 200},
+                                            {"status", "success"}};
+            res.set_content(json_response.dump(), "application/json");
+
+            common::utils::GlobalSignalHandler::instance().request_stop();
+        });
+
+        server->Post("/api/query", [&](const httplib::Request &, httplib::Response &res) {
             std::lock_guard lock(state.mutex);
 
             res.status = 200;
@@ -49,7 +68,7 @@ class ThreadedServer
             try
             {
                 nlohmann::json j = nlohmann::json::parse(req.body);
-                new_client_state = ClientState::parse(j);
+                new_client_state = ClientState::from_json(j);
             }
             catch (const nlohmann::json::exception& e)
             {
@@ -104,16 +123,24 @@ class ThreadedServer
         });
 
 
-        std::cout << "binding " << description << " listener to " << host << ":" << port << "\n";
-        had_error |= !server->bind_to_port(host, port);
+        had_error |= (!server->bind_to_port(host, port));
+
+        had_error |= (!server->is_valid());
         
-        if (had_error)
+        if (!had_error)
         {
-            std::cerr << "Failed to bind " << description << " listener to " << host << ":" << port << "\n";
+            std::cout << "binding " << description << " listener to " << host << ":" << port << " (success)\n";
+        }
+        else
+        {
+            std::cerr << "binding " << description << " listener to " << host << ":" << port << " (FAILED)\n";
         }
 
-        std::cout << "serving " << root_path << "\n";
-        had_error |= (!server->set_mount_point("/", root_path));
+        if (!root_path.empty())
+        {
+            // std::cout << "serving " << root_path << '\n';
+            had_error |= (!server->set_mount_point("/", root_path));
+        }
         if (had_error)
         {
             std::cerr << "error mounting root folder\n";
