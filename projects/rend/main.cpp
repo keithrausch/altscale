@@ -5,14 +5,13 @@
 #include "managers/rend/manager.hpp"
 
 
+
+// this function never actually called. 
+// it just tricks the linking into doing its job
 void force_include()
 {
-    // dummy vars
-    std::string name{};
-    std::string type{};
-
-    // trick linker into thinking these types get used
-    std::make_shared<managers::rend::Manager>(name, type);
+    std::string n,t; // dummy vars
+    std::make_shared<managers::rend::Manager>(n, t);
 }
 
 int main(int argc, char* argv[])

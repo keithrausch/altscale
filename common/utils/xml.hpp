@@ -1,6 +1,6 @@
 
-#ifndef COMMON_XML_HPP
-#define COMMON_XML_HPP
+#ifndef COMMON_UTILS_XML_HPP
+#define COMMON_UTILS_XML_HPP
 
 #include <filesystem>
 #include <fstream>
@@ -14,12 +14,25 @@
 #include <cctype>
 #include <iostream>
 #include <utility>
+#include <chrono>
 
 #include "rapidxml.hpp"
 
 namespace common::utils {
 
-    class Node
+
+template<typename T>
+struct is_chrono_duration : std::false_type {};
+
+template<typename Rep, typename Period>
+struct is_chrono_duration<std::chrono::duration<Rep, Period>>
+    : std::true_type {};
+
+template<typename T>
+inline constexpr bool is_chrono_duration_v =
+    is_chrono_duration<T>::value;
+
+class Node
 {
 public:
     using RapidNode = rapidxml::xml_node<>;
@@ -136,7 +149,7 @@ public:
 
         destination = parse_value<T>(node.node_->value());
 
-        // std::cout << path << " <-- " << destination << "\n";
+        // std::cout << path << " <-- " << destination << '\n';
     }
 
     template<typename T>
@@ -171,90 +184,102 @@ private:
         return std::string(begin, end);
     }
 
+
     // Convert XML text into the requested type.
     template<typename T>
     static T parse_value(const char* raw)
     {
-        std::string text = trim(raw ? raw : ""); // TODO trimming all of these doesnt seem wise for strings and std::filesystem::path
+        const std::string_view raw_text = raw ? raw : "";
 
         if constexpr (std::is_same_v<T, std::string>)
         {
-            return text;
-        }
-        else if constexpr (std::is_same_v<T, bool>)
-        {
-            std::string lower = text;
-
-            for (char& c : lower)
-                c = static_cast<char>(
-                    std::tolower(static_cast<unsigned char>(c))
-                );
-
-            if (lower == "true")
-                return true;
-
-            if (lower == "false")
-                return false;
-
-            // Accept any numeric value as a boolean.
-            std::istringstream stream(text);
-            long double number{};
-
-            if (!(stream >> number) ||
-                (stream >> std::ws, !stream.eof()))
-            {
-                throw std::runtime_error(
-                    "Invalid XML boolean: " + text
-                );
-            }
-
-            return number != 0;
-        }
-        else if constexpr (std::is_integral_v<T>)
-        {
-            T result{};
-
-            auto [ptr, ec] = std::from_chars(
-                text.data(),
-                text.data() + text.size(),
-                result
-            );
-
-            if (ec != std::errc{} ||
-                ptr != text.data() + text.size())
-            {
-                throw std::runtime_error(
-                    "Invalid XML integer: " + text
-                );
-            }
-
-            return result;
-        }
-        else if constexpr (std::is_floating_point_v<T>)
-        {
-            std::istringstream stream(text);
-            T result{};
-
-            if (!(stream >> result) ||
-                (stream >> std::ws, !stream.eof()))
-            {
-                throw std::runtime_error(
-                    "Invalid XML floating-point value: " + text
-                );
-            }
-
-            return result;
+            return std::string(raw_text);
         }
         else if constexpr (std::is_same_v<T, std::filesystem::path>)
         {
-            return std::filesystem::path(text);
+            return std::filesystem::path(raw_text);
         }
         else
         {
-            static_assert(
-                std::is_same_v<T, void>,
-                "Unsupported XML conversion type"
-            );
+            // Numeric and boolean conversions tolerate surrounding whitespace.
+            const std::string text = trim(std::string(raw_text));
+
+            if constexpr (std::is_same_v<T, bool>)
+            {
+                std::string lower = text;
+
+                for (char& c : lower)
+                    c = static_cast<char>(
+                        std::tolower(static_cast<unsigned char>(c))
+                    );
+
+                if (lower == "true")
+                    return true;
+
+                if (lower == "false")
+                    return false;
+
+                std::istringstream stream(text);
+                long double number{};
+
+                if (!(stream >> number) ||
+                    (stream >> std::ws, !stream.eof()))
+                {
+                    throw std::runtime_error(
+                        "Invalid XML boolean: " + text
+                    );
+                }
+
+                return number != 0;
+            }
+            else if constexpr (std::is_integral_v<T>)
+            {
+                T result{};
+
+                auto [ptr, ec] = std::from_chars(
+                    text.data(),
+                    text.data() + text.size(),
+                    result
+                );
+
+                if (ec != std::errc{} ||
+                    ptr != text.data() + text.size())
+                {
+                    throw std::runtime_error(
+                        "Invalid XML integer: " + text
+                    );
+                }
+
+                return result;
+            }
+            else if constexpr (std::is_floating_point_v<T>)
+            {
+                std::istringstream stream(text);
+                T result{};
+
+                if (!(stream >> result) ||
+                    (stream >> std::ws, !stream.eof()))
+                {
+                    throw std::runtime_error(
+                        "Invalid XML floating-point value: " + text
+                    );
+                }
+
+                return result;
+            }
+            else if constexpr (is_chrono_duration_v<T>)
+            {
+                using Rep = typename T::rep;
+
+                return T{parse_value<Rep>(text.c_str())};
+            }
+            else
+            {
+                static_assert(
+                    std::is_same_v<T, void>,
+                    "Unsupported XML conversion type"
+                );
+            }
         }
     }
 };

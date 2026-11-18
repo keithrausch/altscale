@@ -1,5 +1,5 @@
-#ifndef COMMON_SINGLETON_HPP
-#define COMMON_SINGLETON_HPP
+#ifndef COMMON_UTILS_SINGLETON_HPP
+#define COMMON_UTILS_SINGLETON_HPP
 
 namespace common::utils {
 

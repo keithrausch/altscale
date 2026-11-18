@@ -1,5 +1,5 @@
-#ifndef COMMON_MANAGER_BASE_HPP
-#define COMMON_MANAGER_BASE_HPP
+#ifndef COMMON_MANAGERS_MANAGER_BASE_HPP
+#define COMMON_MANAGERS_MANAGER_BASE_HPP
 
 #include <atomic> 
 #include <thread>
@@ -26,7 +26,7 @@ class ManagerBase
 
     ManagerBase(const std::string& name_in, const std::string& type_in) : name{name_in}, type{type_in}
     {
-        register_stop_callback([this](){running = false;});
+        // register_stop_callback([this](){running = false;});
     }
 
     virtual void read_xml(common::utils::XML& xml) = 0;
@@ -34,6 +34,7 @@ class ManagerBase
     
     void request_stop()
     {
+        running = false;
         stop_source.request_stop();
     }
 
@@ -43,13 +44,25 @@ class ManagerBase
     }
 
     template <typename CallbackT>
-    void register_stop_callback(const CallbackT& callback)
+    std::stop_callback<CallbackT> create_stop_callback(const CallbackT& callback)
     {
-        auto callback_ptr = std::make_unique<StopCallbackT>(stop_source.get_token(), callback);
-        if (callback_ptr)
+        // auto callback_ptr = std::make_unique<StopCallbackT>(stop_source.get_token(), callback);
+        // if (callback_ptr)
+        // {
+        //     stop_callbacks.push_back(std::move(callback_ptr));
+        // }
+
+        // check things like std::function that may be 'empty'
+        if constexpr (requires { static_cast<bool>(callback); })
         {
-            stop_callbacks.push_back(std::move(callback_ptr));
+            if (!callback)
+            {
+                // Callable is null/empty
+                return std::stop_callback<CallbackT>();
+            }
         }
+        
+        return std::stop_callback(stop_source.get_token(), callback);
     }
 
     private:

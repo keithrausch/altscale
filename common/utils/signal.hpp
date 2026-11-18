@@ -1,5 +1,5 @@
-#ifndef COMMON_SIGNAL_HPP
-#define COMMON_SIGNAL_HPP
+#ifndef COMMON_UTILS_SIGNAL_HPP
+#define COMMON_UTILS_SIGNAL_HPP
 
 // #include <semaphore>
 #include <stop_token>

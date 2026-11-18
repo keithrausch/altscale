@@ -1,9 +1,20 @@
 
-#include <iostream>
+#include <memory>
+
+#include "common/utils/main_helper.hpp"
+#include "managers/controller/manager.hpp"
+
+
+
+// this function never actually called. 
+// it just tricks the linking into doing its job
+void force_include()
+{
+    std::string n,t; // dummy vars
+    std::make_shared<managers::controller::Manager>(n, t);
+}
 
 int main(int argc, char* argv[])
 {
-    std::cout << "controller\n";
-
-    return 0;
+    return common::utils::main_helper(argc, argv);
 }

@@ -12,6 +12,7 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
+            "miDebuggerPath": "${workspaceFolder}/scripts/sudo_gdb.sh"
             "setupCommands": [
                 {
                     "description": "Pass SIGINT to application",

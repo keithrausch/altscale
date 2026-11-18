@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<params>
+    <uuid_path>uuid.txt</uuid_path>
+    <rend_host>127.0.0.1</rend_host> <!-- example.com --> <!-- for both stun and wg connections -->
+    <stun>
+        <port>8080</port>
+        <scan_duration_s>1.0</scan_duration_s>
+    </stun>
+    <wireguard>
+        <remote>
+            <wireguard_port>51820</wireguard_port> <!-- used with rend_host. EG rend_host:wireguard_port -->
+        </remote>
+        <local>
+            <vpnI_iface_name>wg-rend-peer</vpnI_iface_name>
+            <vpnI_listening_port>51820</vpnI_listening_port>
+            <vpnI_cidr_ip>10.10.1.2/24</vpnI_cidr_ip>
+            <!--
+            <desired_outer_ip>10.10.0.2</desired_outer_ip>
+            <desired_outer_listening_port>51820</desired_outer_listening_port>
+            -->
+        </local>
+    </wireguard>
+</params>

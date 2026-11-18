@@ -1,16 +1,17 @@
-#ifndef MANAGERS_REND_HPP
-#define MANAGERS_REND_HPP
+#ifndef MANAGERS_REND_MANAGER_HPP
+#define MANAGERS_REND_MANAGER_HPP
 
 #include "common/managers/manager_base.hpp"
 #include <chrono>
 #include <vector>
-#include "managers/rend/server.hpp"
-#include "managers/rend/state.hpp"
+#include "common/utils/server.hpp"
+#include "managers/rend/types.hpp"
 #include "common/utils/sleeper.hpp"
+#include "common/utils/wireguard.hpp"
 
 namespace managers::rend {
 
-struct Params
+struct ServerParams
 {
     bool use_http{true};
     std::string host_http{"0.0.0.0"};
@@ -24,7 +25,21 @@ struct Params
 
     std::filesystem::path root_path{"./static"};
 
-    double broadcast_duration_s{5.0};
+    std::chrono::duration<double> broadcast_duration_s{5.0};
+};
+
+struct WireGuardParams
+{
+    std::string rend_vpnI_iface_name{"wg-rend"};
+    std::string rend_vpnI_cidr_ip{"10.10.0.1/24"};
+    uint16_t rend_vpnI_listening_port{51820};
+};
+
+struct Params
+{
+    ServerParams server{};
+    WireGuardParams wg{};
+
 };
 
 
@@ -33,65 +48,19 @@ class Manager : public common::managers::ManagerBase
     public:
 
     Params params{};
-    std::vector<ThreadedServer> servers{};
+    std::vector<common::utils::ThreadedServer> servers{};
     ServerState state{};
+    std::mutex state_mutex{};
+    common::utils::WireGuard::KeyPair keys{};
+    common::utils::WireGuard rend_if{};
 
     Manager(const std::string& name, const std::string& type) : ManagerBase(name, type) {}
-
-    bool init_servers()
-    {
-        bool had_error = false;
-
-        servers.clear();
-
-
-        if (params.use_http)
-        {
-            ThreadedServer server; 
-            had_error |= server.setup(std::make_unique<httplib::Server>(), 
-                                    state, 
-                                    "http", 
-                                    params.host_http, 
-                                    params.port_http,
-                                    params.root_path);
-            if (!had_error)
-            {
-                servers.push_back(std::move(server));
-            }
-        }
-        
-        if (params.use_https)
-        {
-            ThreadedServer server;
-            had_error |= server.setup(std::make_unique<httplib::SSLServer>(params.cert_path.string().c_str(), params.key_path.string().c_str()), 
-                                    state, 
-                                    "https", 
-                                    params.host_https, 
-                                    params.port_https,
-                                    params.root_path);
-            if (!had_error)
-            {
-                servers.push_back(std::move(server));
-            }
-        }
-
-        if (had_error)
-        {
-            return had_error;
-        }
-
-        for (auto & server : servers)
-        {
-            server.run();
-        }
-
-        return had_error;
-    }
-
     void read_xml(common::utils::XML& xml) override;
     void process() override;
-
-
+    
+    
+    void configure_server_endpoints(const std::unique_ptr<httplib::Server>& server);
+    bool init_servers();
 
 };
 

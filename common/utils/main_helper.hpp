@@ -1,5 +1,5 @@
-#ifndef COMMON_MAIN_HPP
-#define COMMON_MAIN_HPP
+#ifndef COMMON_UTILS_MAIN_HPP
+#define COMMON_UTILS_MAIN_HPP
 
 #include <filesystem>
 #include <csignal>

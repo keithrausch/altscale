@@ -1,5 +1,5 @@
-#ifndef COMMON_MANAGER_RUNNER_HPP
-#define COMMON_MANAGER_RUNNER_HPP
+#ifndef COMMON_MANAGERS_MANAGER_RUNNER_HPP
+#define COMMON_MANAGERS_MANAGER_RUNNER_HPP
 
 #include <atomic>
 #include "common/managers/manager_base.hpp"
@@ -20,20 +20,6 @@ class ManagerRunner
     std::vector<std::jthread> threads{};
     
     public:
-//     bool register_manager(const std::string & name, std::shared_ptr<ManagerBase> manager)
-//     {
-//         std::lock_guard lock(mutex);
-//         bool had_error = false;
-//         had_error |= (!manager);
-//         had_error |= managers.contains(name);
-//         
-//         if (!had_error)
-//         {
-//             managers[name] = manager;
-//         }
-// 
-//         return had_error;
-//     }
 
     void load_configs_impl(const std::filesystem::path& config_path)
     {

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<managers>
+  <manager>
+    <enabled>1</enabled>
+    <name>controller</name>
+    <type>controller</type>
+    <config>managers/controller/config.xml</config>
+  </manager>
+</managers>

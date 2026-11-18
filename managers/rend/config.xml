@@ -1,13 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <params>
-    <use_http>true</use_http>
-    <host_http>0.0.0.0</host_http>
-    <port_http>8080</port_http>
-    <use_https>true</use_https>
-    <host_https>0.0.0.0</host_https>
-    <port_https>8443</port_https>
-    <cert_path>certs/certs/cert.pem</cert_path>
-    <key_path>certs/certs/key.pem</key_path>
-    <root_path>./static</root_path>
-    <broadcast_duration_s>5.0</broadcast_duration_s>
+    <server> <!-- the 'rend' server-->
+        <use_http>true</use_http>
+        <host_http>0.0.0.0</host_http>
+        <port_http>8080</port_http>
+
+        <use_https>true</use_https>
+        <host_https>0.0.0.0</host_https>
+        <port_https>8443</port_https>
+        <cert_path>certs/certs/cert.pem</cert_path>
+        <key_path>certs/certs/key.pem</key_path>
+
+        <root_path>./static</root_path>
+
+        <broadcast_duration_s>5.0</broadcast_duration_s>
+    </server>
+    <wireguard>
+        <rend_vpnI_iface_name>wg-rend</rend_vpnI_iface_name>
+        <rend_vpnI_cidr_ip>10.10.1.1/24</rend_vpnI_cidr_ip>
+        <rend_vpnI_listening_port>51820</rend_vpnI_listening_port>
+    </wireguard>
 </params>
