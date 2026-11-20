@@ -37,7 +37,8 @@ namespace managers::controller {
         r.require(params.wg.remote.wireguard_port, "params.wireguard.remote.wireguard_port");
         r.require(params.wg.local.vpnI_iface_name, "params.wireguard.local.vpnI_iface_name");
         r.require(params.wg.local.vpnI_listening_port, "params.wireguard.local.vpnI_listening_port");
-        r.require(params.wg.local.vpnI_cidr_ip, "params.wireguard.local.vpnI_cidr_ip");
+        r.require(params.wg.local.vpnI_ip, "params.wireguard.local.vpnI_ip");
+        r.require(params.wg.local.vpnI_subnet, "params.wireguard.local.vpnI_subnet");
         // r.require(params.wg.desired_outer_ip, "params.wireguard.desired_outer_ip");
         // r.require(params.wg.desired_outer_port, "params.wireguard.desired_outer_port");
 
@@ -71,7 +72,7 @@ namespace managers::controller {
 
             // 3. Record the server IP address
             resolved_ip = connected_endpoint.address().to_string();
-            std::cout << "Connected to server IP: " << *resolved_ip << std::endl;
+            // std::cout << "Connected to server IP: " << *resolved_ip << std::endl;
 
             // 4. Build the HTTP POST request
             http::request<http::string_body> req{http::verb::post, "/api/register", 11};
@@ -89,12 +90,17 @@ namespace managers::controller {
             http::response<http::string_body> res;
             http::read(stream, buffer, res);
 
-            std::cout << "Status: " << res.result_int() << std::endl;
+//             std::cout << "Status: " << res.result_int() << std::endl;
 
-            if (200 != res.result_int())
+            if (200 == res.result_int())
             {
-                std::cout << "Response: " << res.body() << std::endl;
-                server_state = managers::rend::ServerState::from_json(common::utils::JSON::parse(res.body()));
+                auto total_json = common::utils::JSON::parse(res.body());
+                auto server_state_json = total_json.at("server_state");
+                server_state = managers::rend::ServerState::from_json(server_state_json);
+            }
+            else
+            {
+                std::cerr << "server response: " << res.body() << std::endl;
             }
 
             // 7. Gracefully close the socket
@@ -176,13 +182,19 @@ namespace managers::controller {
             return;
         }
 
+        if (Error::SUCCESS != rend_if.set_private_key(keys.private_key_base64))
+        {
+            common::utils::GlobalSignalHandler::instance().request_stop();
+            return;
+        }
+
         if (Error::SUCCESS != rend_if.set_listen_port(params.wg.local.vpnI_listening_port))
         {
             common::utils::GlobalSignalHandler::instance().request_stop();
             return;
         }
 
-        if (Error::SUCCESS != rend_if.set_private_key(keys.private_key_base64))
+        if (Error::SUCCESS != rend_if.set_up_down(false))
         {
             common::utils::GlobalSignalHandler::instance().request_stop();
             return;
@@ -201,9 +213,21 @@ namespace managers::controller {
             managers::rend::UniqueClient client{.uuid=uuid,
                 .public_key = keys.public_key_base64,
                 .interfaces = ifaces,
-                .desired_inner_cidr_ip = params.wg.local.vpnI_cidr_ip};
+                .desired_inner_ip = params.wg.local.vpnI_ip};
 
             auto [resolved_ip, server_state] = send_registration(client.to_json().dump());
+
+            if (!resolved_ip)
+            {
+                std::cout << "could not resolve ip\n";
+            }
+
+            if (!server_state)
+            {
+                std::cout << "server state bad\n";
+            }
+
+
 
             if (!resolved_ip || !server_state)
             {
@@ -214,26 +238,30 @@ namespace managers::controller {
             if (! resolved_ip->empty())
             {
                 change_detected |= (last_server_ip != *resolved_ip);
-                std::cout << "server ip changed from " << std::quoted(last_server_ip) << " to "<< std::quoted(*resolved_ip) << '\n';
             }
-
+            
             if (change_detected)
             {
-
-                if (Error::SUCCESS != rend_if.set_ip(params.wg.local.vpnI_cidr_ip))
+                std::cout << "server ip changed from " << std::quoted(last_server_ip) << " to "<< std::quoted(*resolved_ip) << '\n';
+                if (Error::SUCCESS != rend_if.set_ip(params.wg.local.vpnI_ip, params.wg.local.vpnI_subnet))
                 {
                     return;
                 }
 
                 // change detected
+                auto peer_cidr_ip = common::utils::net::make_cidr_full_length(server_state->rend_vpnI_ip);
                 if (Error::SUCCESS != rend_if.add_peer(server_state->rend_vpnI_public_key,
-                                                   {server_state->rend_vpnI_cidr_ip},
+                                                   {peer_cidr_ip},
                                                    *resolved_ip,
-                                                   params.wg.remote.wireguard_port
+                                                    params.wg.remote.wireguard_port
                                                    ))
                 {
-                std::cerr << "error adding peer\n";
-                return;
+                    return;
+                }
+
+                if (Error::SUCCESS != rend_if.set_up_down(true))
+                {
+                    return;
                 }
             }
 

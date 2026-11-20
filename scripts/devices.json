@@ -1,0 +1,49 @@
+
+{
+    "compile_server": {
+        "name": "builder",
+        "host": "172.20.96.100",
+        "user": "kpr",
+        "port": 22,
+        "project_dir": "/home/kpr/builds/scale",
+        "build_preset": "THIS SHOULD NOT HAVE A PRESET",
+        "build_args": []
+    },
+
+    "targets": {
+        "kpr1": {
+            "description": "kpr1",
+            "host": "172.20.96.100",
+            "user": "kpr",
+            "port": 22,
+            "destination": "/tmp/scale",
+            "build_preset": "release-amd64",
+            "artifacts": [
+                "build",
+                "certs",
+                "scripts",
+                "containerfile",
+                "managers/**/*.xml",
+                "projects/rend/config.xml",
+                "websites"
+            ]
+        },
+        "kpr4": {
+            "description": "kpr4",
+            "host": "kpr4.local",
+            "user": "kpr",
+            "port": 22,
+            "destination": "/tmp/scale",
+            "build_preset": "release-arm64",
+            "artifacts": [
+                "build",
+                "certs",
+                "scripts",
+                "containerfile",
+                "managers/**/*.xml",
+                "projects/controller/config.xml",
+                "websites"
+            ]
+        }
+    }
+}

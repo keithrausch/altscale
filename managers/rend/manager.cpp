@@ -25,7 +25,8 @@ namespace managers::rend {
         r.require(params.server.broadcast_duration_s, "params.server.broadcast_duration_s");
 
         r.require(params.wg.rend_vpnI_iface_name, "params.wireguard.rend_vpnI_iface_name");
-        r.require(params.wg.rend_vpnI_cidr_ip, "params.wireguard.rend_vpnI_cidr_ip");
+        r.require(params.wg.rend_vpnI_ip, "params.wireguard.rend_vpnI_ip");
+        r.require(params.wg.rend_vpnI_subnet, "params.wireguard.rend_vpnI_subnet");
         r.require(params.wg.rend_vpnI_listening_port, "params.wireguard.rend_vpnI_listening_port");
     }
 
@@ -81,7 +82,7 @@ namespace managers::rend {
             return;
         }
 
-        if (Error::SUCCESS != rend_if.set_ip(params.wg.rend_vpnI_cidr_ip))
+        if (Error::SUCCESS != rend_if.set_ip(params.wg.rend_vpnI_ip, params.wg.rend_vpnI_subnet))
         {
             common::utils::GlobalSignalHandler::instance().request_stop();
             return;
@@ -132,8 +133,8 @@ namespace managers::rend {
             res.set_content(json_response.dump(), "application/json");
         });
 
-        server->Post("/api/register", [&](const httplib::Request &req, httplib::Response &res) {
-
+        server->Post("/api/register", [&](const httplib::Request &req, httplib::Response &res)
+        {
             auto client_endpoint = req.remote_addr + ":" + std::to_string(req.remote_port);
 
             UniqueClient new_client;
@@ -162,8 +163,7 @@ namespace managers::rend {
             bool desired_endpoint_occupied = false;
             for (const auto & [uuid, client] : state.clients)
             {
-                desired_endpoint_occupied |= ((uuid != new_uuid) && (client.unique_client.desired_inner_cidr_ip == new_client.desired_inner_cidr_ip));
-
+                desired_endpoint_occupied |= ((uuid != new_uuid) && (client.unique_client.desired_inner_ip == new_client.desired_inner_ip));
             }
             if (desired_endpoint_occupied)
             {
@@ -214,7 +214,8 @@ namespace managers::rend {
             if (client_changed)
             {
                 std::cout << "CHANGE DETECTED. NEW CLIENT: " << new_client.to_json().dump() << '\n';
-                if (Error::SUCCESS != rend_if.add_peer(new_client.public_key, {new_client.desired_inner_cidr_ip}
+                auto peer_cidr_ip = common::utils::net::make_cidr_full_length(new_client.desired_inner_ip);
+                if (Error::SUCCESS != rend_if.add_peer(new_client.public_key, {peer_cidr_ip}
                                                                          /* ip and port left unknown for client ot connect first */ ))
                 {
                     // TODO wipe this client from the record?
@@ -248,7 +249,7 @@ namespace managers::rend {
             }
 
             state.rend_vpnI_public_key = keys.public_key_base64;
-            state.rend_vpnI_cidr_ip = params.wg.rend_vpnI_cidr_ip;
+            state.rend_vpnI_ip = params.wg.rend_vpnI_ip;
 
             // indicate success
             res.status = 200;

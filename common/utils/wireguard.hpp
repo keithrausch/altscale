@@ -192,6 +192,15 @@ static Error parse_cidr_ip(
     return Error::SUCCESS;
 }
 
+static bool is_ipv4(const std::string& ip)
+{
+    return ip.contains('.');
+}
+
+static std::string make_cidr_full_length(const std::string& ip)
+{
+    return ip + (is_ipv4(ip) ? "/32" : "/128");
+}
 }
 
 

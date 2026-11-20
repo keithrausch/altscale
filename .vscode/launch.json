@@ -5,6 +5,7 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
+            // "preLaunchTask": "Build", # commenting because some people like this. some dont
             "program": "${command:cmake.launchTargetPath}",
             "args": ["./projects/rend/config.xml"],
             "stopAtEntry": false,
@@ -12,7 +13,12 @@
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "${workspaceFolder}/scripts/sudo_gdb.sh"
+            "logging": {
+                "engineLogging": true,
+                "trace": true,
+                "traceResponse": true
+            },
+            "miDebuggerPath": "${workspaceFolder}/scripts/gdb.sh",
             "setupCommands": [
                 {
                     "description": "Pass SIGINT to application",

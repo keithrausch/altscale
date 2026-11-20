@@ -31,7 +31,8 @@ struct ServerParams
 struct WireGuardParams
 {
     std::string rend_vpnI_iface_name{"wg-rend"};
-    std::string rend_vpnI_cidr_ip{"10.10.0.1/24"};
+    std::string rend_vpnI_ip{"10.10.0.1"};
+    uint8_t rend_vpnI_subnet{24};
     uint16_t rend_vpnI_listening_port{51820};
 };
 

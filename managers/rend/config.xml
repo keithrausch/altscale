@@ -11,13 +11,14 @@
         <cert_path>certs/certs/cert.pem</cert_path>
         <key_path>certs/certs/key.pem</key_path>
 
-        <root_path>./static</root_path>
+        <root_path>./websites/stun</root_path>
 
         <broadcast_duration_s>5.0</broadcast_duration_s>
     </server>
     <wireguard>
         <rend_vpnI_iface_name>wg-rend</rend_vpnI_iface_name>
-        <rend_vpnI_cidr_ip>10.10.1.1/24</rend_vpnI_cidr_ip>
-        <rend_vpnI_listening_port>51820</rend_vpnI_listening_port>
+        <rend_vpnI_ip>10.10.1.1</rend_vpnI_ip>
+        <rend_vpnI_subnet>32</rend_vpnI_subnet>
+        <rend_vpnI_listening_port>51821</rend_vpnI_listening_port>
     </wireguard>
 </params>

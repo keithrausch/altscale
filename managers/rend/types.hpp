@@ -88,7 +88,7 @@ struct UniqueClient
     std::string uuid{};
     std::string public_key{};
     Interfaces interfaces{};
-    std::string desired_inner_cidr_ip{};
+    std::string desired_inner_ip{};
 
 
     bool operator==(const UniqueClient&) const = default;
@@ -100,7 +100,7 @@ struct UniqueClient
         ret.uuid = j.at("uuid").get<std::string>();
         ret.public_key = j.at("public_key").get<std::string>();
         ret.interfaces = Interfaces::from_json(j.at("interfaces"));
-        ret.desired_inner_cidr_ip = j.at("desired_inner_cidr_ip").get<std::string>();
+        ret.desired_inner_ip = j.at("desired_inner_ip").get<std::string>();
         return ret;
     }
 
@@ -111,7 +111,7 @@ struct UniqueClient
         j["uuid"] = uuid;
         j["public_key"] = public_key;
         j["interfaces"] = interfaces.to_json();
-        j["desired_inner_cidr_ip"] = desired_inner_cidr_ip;
+        j["desired_inner_ip"] = desired_inner_ip;
         return j;
     }
 };
@@ -177,7 +177,7 @@ struct TimestampedClient
 struct ServerState
 {
     std::string rend_vpnI_public_key{};
-    std::string rend_vpnI_cidr_ip{};
+    std::string rend_vpnI_ip{};
     std::unordered_map<std::string, TimestampedClient> clients{};
 
 
@@ -186,7 +186,7 @@ struct ServerState
         ServerState ret{};
 
         ret.rend_vpnI_public_key = j.at("rend_vpnI_public_key").get<std::string>();
-        ret.rend_vpnI_cidr_ip = j.at("rend_vpnI_cidr_ip").get<std::string>();
+        ret.rend_vpnI_ip = j.at("rend_vpnI_ip").get<std::string>();
 
         if (j.contains("clients") && j.at("clients").is_array())
         {
@@ -206,7 +206,7 @@ struct ServerState
 
         // interface information
         j["rend_vpnI_public_key"] = rend_vpnI_public_key;
-        j["rend_vpnI_cidr_ip"] = rend_vpnI_cidr_ip;
+        j["rend_vpnI_ip"] = rend_vpnI_ip;
         j["clients"] = common::utils::JSON::array();
 
         for (const auto & [uuid, client] : clients)

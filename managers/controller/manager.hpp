@@ -25,7 +25,8 @@ struct WireGuardLocalParams
 {
     std::string vpnI_iface_name{"wg-rend"};
     uint16_t vpnI_listening_port{};
-    std::string vpnI_cidr_ip{};
+    std::string vpnI_ip{};
+    uint8_t vpnI_subnet{};
     // std::string desired_outer_ip{};
     // uint16_t desired_outer_port{};
 
